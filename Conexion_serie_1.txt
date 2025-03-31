@@ -1,0 +1,44 @@
+#include "main.h"
+
+UART_HandleTypeDef huart1;  // Declarar UART1
+
+void SystemClock_Config(void);
+static void MX_GPIO_Init(void);
+static void MX_USART1_UART_Init(void);
+
+// Función para enviar comandos al módulo DY-SV5W
+void sendCommand(uint8_t cmd, uint8_t param1, uint8_t param2) {
+    uint8_t checksum = cmd + param1 + param2;  // Calcular checksum
+    uint8_t data[] = {0xAA, cmd, param1, param2, checksum};  
+    HAL_UART_Transmit(&huart1, data, sizeof(data), HAL_MAX_DELAY);
+}
+
+int main(void) {
+    HAL_Init();
+    SystemClock_Config();
+    MX_GPIO_Init();
+    MX_USART1_UART_Init();
+
+    HAL_Delay(1000);  // Esperar que el módulo se inicie
+
+    sendCommand(0x02, 0x00, 0xAC);  // Reproducir primera canción
+
+    while (1) {
+        // Aquí puedes agregar más comandos o lógica
+    }
+}
+
+// Configuración de UART1
+static void MX_USART1_UART_Init(void) {
+    huart1.Instance = USART1;
+    huart1.Init.BaudRate = 9600;
+    huart1.Init.WordLength = UART_WORDLENGTH_8B;
+    huart1.Init.StopBits = UART_STOPBITS_1;
+    huart1.Init.Parity = UART_PARITY_NONE;
+    huart1.Init.Mode = UART_MODE_TX_RX;
+    huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+    huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+    if (HAL_UART_Init(&huart1) != HAL_OK) {
+        Error_Handler();
+    }
+}
